@@ -1,0 +1,58 @@
+name: Localizely Download 🌍
+
+# ======================================================
+# 🔁 Reusable workflow
+# - Can be called from any workflow in this repo
+# ======================================================
+on:
+  workflow_call:
+    inputs:
+      output-path:
+        description: 'Directory where ARB files will be downloaded'
+        required: false
+        default: 'lib/l10n'
+        type: string
+    secrets:
+      LOCALIZELY_API_KEY:
+        required: true
+
+jobs:
+  download:
+    name: Download translations
+    runs-on: ubuntu-latest
+
+    steps:
+      # ==================================================
+      # 📥 SOURCE CODE
+      # - Required so Localizely can write into repo paths
+      # ==================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # --------------------------------------------------
+      # 📦 Install Localizely CLI
+      # --------------------------------------------------
+      - name: Install Localizely CLI
+        run: npm install -g @localizely/cli
+
+      # ==================================================
+      # 🌍 LOCALIZATION (Localizely)
+      # - Requires GitHub Secret: LOCALIZELY_API_KEY
+      # - Output directory: lib/l10n/*.arb
+      # ==================================================
+      - name: Download translations from Localizely
+        run: |
+          localizely download \
+            --api-token ${{ secrets.LOCALIZELY_API_KEY }} \
+            --format flutter_arb \
+            --path ${{ inputs.output-path }}
+
+      # ==================================================
+      # 📤 ARTIFACT
+      # - Share localization files with downstream jobs
+      # ==================================================
+      - name: Upload localization artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: localization
+          path: ${{ inputs.output-path }}
