@@ -62,7 +62,7 @@ jobs:
       # ==================================================
       - name: Download translations from Localizely
         run: |
-          localizely download \
+          localizely-cli pull \
             --api-token ${{ secrets.LOCALIZELY_API_KEY }} \
             --format flutter_arb \
             --path ${{ inputs.output-path }}
