@@ -33,7 +33,9 @@ jobs:
       # 📦 Install Localizely CLI
       # --------------------------------------------------
       - name: Install Localizely CLI
-        run: npm install -g @localizely/cli
+        run: |
+          curl -s https://get.localizely.com | bash
+          sudo mv localizely /usr/local/bin
 
       # ==================================================
       # 🌍 LOCALIZATION (Localizely)
