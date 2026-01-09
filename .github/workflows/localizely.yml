@@ -34,8 +34,15 @@ jobs:
       # --------------------------------------------------
       - name: Install Localizely CLI
         run: |
-          curl -s https://get.localizely.com | bash
-          sudo mv localizely /usr/local/bin
+          curl -L https://github.com/localizely/localizely-cli/releases/latest/download/localizely-linux-amd64 -o localizely
+          chmod +x localizely
+          sudo mv localizely /usr/local/bin/localizely
+
+      # --------------------------------------------------
+      # 📦 Install Localizely CLI
+      # --------------------------------------------------
+      - name: Verify Localizely CLI
+        run: localizely --version
 
       # ==================================================
       # 🌍 LOCALIZATION (Localizely)
