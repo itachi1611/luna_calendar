@@ -41,16 +41,16 @@ jobs:
             os: ubuntu-latest
 
           # 🐧 Linux
-          - platform: linux
-            os: ubuntu-latest
+          #- platform: linux
+          #  os: ubuntu-latest
 
           # 🍎 iOS
           - platform: ios
             os: macos-latest
 
           # 🖥️ macOS
-          - platform: macos
-            os: macos-latest
+          #- platform: macos
+          #  os: macos-latest
 
     steps:
       # ==================================================
@@ -96,8 +96,8 @@ jobs:
           case "${{ matrix.platform }}" in
             android) flutter precache --android ;;
             ios) flutter precache --ios ;;
-            macos) flutter precache --macos ;;
-            linux) flutter precache --linux ;;
+            #macos) flutter precache --macos ;;
+            #linux) flutter precache --linux ;;
           esac
 
       # ==================================================
@@ -151,12 +151,12 @@ jobs:
             ios)
               flutter build ios --no-codesign
               ;;
-            macos)
-              flutter build macos
-              ;;
-            linux)
-              flutter build linux
-              ;;
+            #macos)
+            #  flutter build macos
+            #  ;;
+            #linux)
+            #  flutter build linux
+            #  ;;
           esac
 
       # ==================================================
@@ -182,20 +182,20 @@ jobs:
           path: build/ios/iphoneos/Runner.app
 
       # 🖥️ macOS
-      - name: Upload macOS artifact 📦
-        if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-app
-          path: build/macos/Build/Products/Release/**
+      #- name: Upload macOS artifact 📦
+      #  if: matrix.platform == 'macos'
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: macos-app
+      #    path: build/macos/Build/Products/Release/**
 
       # 🐧 Linux
-      - name: Upload Linux artifact 📦
-        if: matrix.platform == 'linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-app
-          path: build/linux/x64/release/bundle/**
+      #- name: Upload Linux artifact 📦
+      #  if: matrix.platform == 'linux'
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: linux-app
+      #    path: build/linux/x64/release/bundle/**
 
       # ==================================================
       # 🚀 RELEASE FLOW (NOT USED YET)
