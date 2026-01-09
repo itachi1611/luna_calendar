@@ -6,8 +6,8 @@ name: Flutter Fox CI - Basic 🦊
 # - Future: enable push to main / develop if needed
 # ======================================================
 on:
-  # push:
-  #   branches: [ main, develop ]
+  push:
+    branches: [ release ]
   pull_request:
     branches: [ release ]
 
