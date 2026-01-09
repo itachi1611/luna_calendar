@@ -1,0 +1,209 @@
+name: Flutter Fox CI - Basic 🦊
+
+# ======================================================
+# 🚦 TRIGGERS
+# - Run on push & PR targeting `release`
+# - Manual trigger allow choosing Android build type
+# ======================================================
+on:
+  workflow_dispatch:
+    inputs:
+      android_build_type:
+        description: 'APK / AAB'
+        required: true
+        default: apk
+        type: choice
+        options:
+          - apk
+          - appbundle
+  #push:
+  #  branches: [ release ]
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  # ====================================================
+  # 🤖 ANDROID CI JOB
+  # ====================================================
+  build:
+    name: Build • ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 🤖 Android
+          - platform: android
+            os: ubuntu-latest
+
+          # 🐧 Linux
+          #- platform: linux
+          #  os: ubuntu-latest
+
+          # 🍎 iOS
+          - platform: ios
+            os: macos-latest
+
+          # 🖥️ macOS
+          #- platform: macos
+          #  os: macos-latest
+
+    steps:
+      # ==================================================
+      # 📥 SOURCE CODE
+      # ==================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ==================================================
+      # ☕ JAVA TOOLCHAIN
+      # Required for Android Gradle builds
+      # ==================================================
+      - name: Set up Java 17
+        if: matrix.platform == 'android' || matrix.platform == 'linux'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # ==================================================
+      # 🐦 FLUTTER SDK
+      # - Flutter version is pinned for CI stability
+      # ==================================================
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: stable
+          cache: true
+
+      # ==================================================
+      # 📦 FLUTTER PRECACHE
+      #
+      # 🔹 CURRENT:
+      #   - Android only (fast CI)
+      #
+      # 🔹 FUTURE:
+      #   - All platforms: `flutter precache`
+      #   - Selective platforms as needed
+      # ==================================================
+      - name: Flutter precache
+        run: |
+          case "${{ matrix.platform }}" in
+            android) flutter precache --android ;;
+            ios) flutter precache --ios ;;
+            #macos) flutter precache --macos ;;
+            #linux) flutter precache --linux ;;
+          esac
+
+      # ==================================================
+      # 📦 DEPENDENCIES
+      # ==================================================
+      - name: Install dependencies
+        run: flutter pub get
+
+      # ==================================================
+      # 🎨 CODE FORMAT (OPTIONAL)
+      # - Enable when formatting is enforced
+      # ==================================================
+      # - name: Dart format check
+      #   run: dart format . --set-exit-if-changed
+
+      # ==================================================
+      # 🔍 STATIC ANALYSIS
+      # ==================================================
+      - name: Flutter analyze
+        run: flutter analyze
+
+      # ==================================================
+      # 🧪 TESTS (OPTIONAL)
+      # - Enable when test coverage is ready
+      # ==================================================
+      # - name: Run unit & widget tests
+      #   run: flutter test
+
+      # ==================================================
+      # 🏗️ BUILD (DEBUG)
+      # - Smoke test to ensure Android compiles
+      # ==================================================
+      - name: Build
+        run: |
+          case "${{ matrix.platform }}" in
+            android)
+              # ----------------------------------------------
+              # 🤖 ANDROID BUILD TYPE
+              # - Default: APK (debug)
+              # - Manual trigger can select: appbundle (release)
+              # ----------------------------------------------
+              BUILD_TYPE="${{ github.event.inputs.android_build_type || 'apk' }}"
+              if [ "$BUILD_TYPE" = "appbundle" ]; then
+                echo "▶ Building Android App Bundle (AAB - release)"
+                flutter build appbundle --release
+              else
+                echo "▶ Building Android APK (debug)"
+                flutter build apk --debug
+              fi
+              ;;
+            ios)
+              flutter build ios --no-codesign
+              ;;
+            #macos)
+            #  flutter build macos
+            #  ;;
+            #linux)
+            #  flutter build linux
+            #  ;;
+          esac
+
+      # ==================================================
+      # 📤 ARTIFACT
+      # - Downloadable from GitHub Actions UI
+      # ==================================================
+      # 🤖 Android
+      - name: Upload Android artifacts
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ github.event.inputs.android_build_type || 'apk' }}
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+
+      # 🍎 iOS
+      - name: Upload iOS artifact 📦
+        if: matrix.platform == 'ios'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app
+          path: build/ios/iphoneos/Runner.app
+
+      # 🖥️ macOS
+      #- name: Upload macOS artifact 📦
+      #  if: matrix.platform == 'macos'
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: macos-app
+      #    path: build/macos/Build/Products/Release/**
+
+      # 🐧 Linux
+      #- name: Upload Linux artifact 📦
+      #  if: matrix.platform == 'linux'
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: linux-app
+      #    path: build/linux/x64/release/bundle/**
+
+      # ==================================================
+      # 🚀 RELEASE FLOW (NOT USED YET)
+      #
+      # Planned:
+      # - Build release AAB
+      # - App signing
+      # - Upload to Google Play
+      # ==================================================
+      # - name: Build release AAB
+      #   run: flutter build appbundle --release
