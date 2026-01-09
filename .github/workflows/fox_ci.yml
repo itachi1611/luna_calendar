@@ -1,1 +1,56 @@
+name: Flutter Fox CI - Basic
 
+on:
+#  push:
+#    branches: [ main, develop ]
+  pull_request:
+    branches: [ release ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: CI - analyze / test / build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (required for Android builds)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'   # or specific version, ex '3.22.0'
+          channel: stable
+          cache: true
+
+      - name: Enable Flutter web caching (optional)
+        run: flutter precache
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Uncomment to format source with dart
+      #- name: Format check
+      #  run: dart format . --set-exit-if-changed
+
+      - name: Static analyze
+        run: flutter analyze
+
+      # Uncomment to run unit test
+      #- name: Run unit & widget tests
+      #  run: flutter test --no-sound-null-safety
+
+      - name: Build debug APK (smoke test)
+        run: flutter build apk --debug
+
+      # Uncomment to also build release app bundle (see notes below)
+      # - name: Build release AAB
+      #   run: flutter build appbundle --release
