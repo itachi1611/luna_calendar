@@ -66,3 +66,55 @@ class _SplashPageState extends State<SplashPage> {
     );
   }
 }
+
+// Alternative using StreamController
+// class SplashPage extends StatefulWidget {
+//   const SplashPage({super.key});
+
+//   @override
+//   State<SplashPage> createState() => _SplashPageState();
+// }
+
+// class _SplashPageState extends State<SplashPage> {
+  final _logoStyleController = StreamController<FlutterLogoStyle>();
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  @override
+  void dispose() {
+    _logoStyleController.close();
+    super.dispose();
+  }
+
+  Future<void> _init() async {
+    await _delay;
+    _logoStyleController.sink.add(FlutterLogoStyle.markOnly);
+
+    await _delay;
+    if (!mounted) return;
+    context.pushReplacement(Routers.home.routerPath);
+  }
+
+  Future<void> get _delay async =>
+      await Future.delayed(const Duration(seconds: 2));
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: StreamBuilder<FlutterLogoStyle>(
+        stream: _logoStyleController.stream,
+        initialData: FlutterLogoStyle.horizontal,
+        builder: (context, snapshot) {
+          return FlutterLogo(
+            size: context.heightPx / 8,
+            style: snapshot.data ?? FlutterLogoStyle.horizontal,
+          );
+        },
+      ).center,
+    );
+  }
+}
